@@ -57,6 +57,66 @@ void motors ( short int y )
   }
 }
 
+void setupBlueToothConnection()
+{
+    bluetoothSerial.begin(38400); //Set BluetoothBee BaudRate to default baud rate 38400
+    delay(1000);
+    sendBlueToothCommand("\r\n+STWMOD=0\r\n");    // 0 = slave
+    sendBlueToothCommand("\r\n+STNA=SedBlutoth-st_XX\r\n"); 
+    sendBlueToothCommand("\r\n+STAUTO=0\r\n");    // 0 = Auto-connect forbidden
+    sendBlueToothCommand("\r\n+STOAUT=1\r\n");    // 1 = Permit Paired device to connect me
+    sendBlueToothCommand("\r\n+STPIN=0000\r\n");
+    delay(2000); // This delay is required.
+    sendBlueToothCommand("\r\n+INQ=1\r\n");      // 1 = Enable been inquired (slave)
+    delay(2000); // This delay is required.
+    
+    Serial.println("You are connected-1");
+    bluetoothSerial.print("You are connected-2");
+}
+
+//Checks if the response "OK" is received
+void CheckOK()
+{
+  char a,b;
+  while(1) {
+    if(bluetoothSerial.available())
+    {
+    a = bluetoothSerial.read();
+// ************************************* debug ********************************************
+    Serial.write(a);    // show response from bluetooth module
+
+    if('O' == a)
+    {
+      // Wait for next character K. available() is required in some cases, as K is not immediately available.
+      while(bluetoothSerial.available())
+      {
+         b = bluetoothSerial.read();
+        
+// ************************************* debug ********************************************
+    Serial.write(b);        
+        
+         break;
+      }
+      if('K' == b)
+      {
+        break;
+      }
+    }
+   }
+  }
+
+  while( (a = bluetoothSerial.read()) != -1)
+  {
+    //Wait until all other response chars are received
+  }
+}
+
+void sendBlueToothCommand(char command[])
+{
+    bluetoothSerial.print(command);
+    CheckOK();   
+}
+
 
 void setup( ) 
 {
@@ -67,13 +127,9 @@ void setup( )
    
    pinMode( RxD, INPUT );
    pinMode( TxD, OUTPUT );
-  
-   bluetoothSerial.begin( 9600 );
-   bluetoothSerial.flush(  );
-   delay( 500 );
- 
+   
    Serial.begin( 9600 );
-   Serial.println( "Ready" );  
+   setupBlueToothConnection();  
 }
 
 
