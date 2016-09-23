@@ -1,11 +1,66 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/coordinator_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fitsSystemWindows="true"
-    tools:context="com.robotiger.MainActivity">
+    android:background="@drawable/background">
 
-</LinearLayout>
+    <RelativeLayout
+        android:layout_width="300dp"
+        android:layout_height="300dp"
+        android:layout_gravity="center"
+        android:background="@drawable/diamond"
+        android:backgroundTint="@color/colorAccent">
+
+        <ImageButton
+            android:id="@+id/upArrowImageButton"
+            android:layout_width="74dp"
+            android:layout_height="74dp"
+            android:background="@drawable/up_arrow"
+            android:backgroundTint="@color/colorAccent"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="16dp"/>
+
+        <ImageButton
+            android:id="@+id/downArrowImageButton"
+            android:layout_width="74dp"
+            android:layout_height="74dp"
+            android:background="@drawable/down_arrow"
+            android:backgroundTint="@color/colorAccent"
+            android:layout_centerHorizontal="true"
+            android:layout_alignParentBottom="true"
+            android:layout_marginBottom="16dp"/>
+
+        <ImageButton
+            android:id="@+id/leftArrowImageButton"
+            android:layout_width="74dp"
+            android:layout_height="74dp"
+            android:background="@drawable/left_arrow"
+            android:backgroundTint="@color/colorAccent"
+            android:layout_centerVertical="true"
+            android:layout_marginLeft="16dp"/>
+
+        <ImageButton
+            android:id="@+id/rightArrowImageButton"
+            android:layout_width="74dp"
+            android:layout_height="74dp"
+            android:background="@drawable/right_arrow"
+            android:backgroundTint="@color/colorAccent"
+            android:layout_centerVertical="true"
+            android:layout_alignParentEnd="true"
+            android:layout_marginRight="16dp"/>
+
+    </RelativeLayout>
+
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/powerImageButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|start"
+        android:layout_margin="32dp"
+        android:src="@drawable/ic_power_settings_new_white"
+        app:fabSize="mini"
+        app:elevation="6dp"/>
+
+</android.support.design.widget.CoordinatorLayout>

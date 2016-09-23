@@ -1,38 +1,50 @@
 package com.robotiger;
 
+import android.animation.ObjectAnimator;
+import android.animation.PropertyValuesHolder;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
+import android.content.Intent;
+import android.content.res.ColorStateList;
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.widget.Toast;
+import android.view.animation.Animation;
+import android.widget.ImageButton;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.UUID;
 
-public class MainActivity extends AppCompatActivity
+public class MainActivity extends AppCompatActivity implements View.OnTouchListener
 {
-    private static final String TAG = "CLIENT BLUETOOTH";
-    private static final boolean D = true;
+    /* Constants */
+    private static final String TAG = "CLIENT";
+    private static final UUID MY_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
+    private static final String MAC_ADDRESS = "00:13:EF:00:0E:5F";
+    private static final int REQUEST_ENABLE_BT = 1;
+    private static boolean CONNECTED;
+    private static boolean PRESSED;
 
-    private BluetoothAdapter mBluetoothAdapter = null;
-    private BluetoothSocket btSocket = null;
-    private OutputStream os = null;
-    private InputStream is = null;
+    /* Bluetooth Adapter */
+    private static BluetoothAdapter mBluetoothAdapter;
 
-    private static final UUID MY_UUID =
-            UUID.fromString( "00001101-0000-1000-8000-00805F9B34FB" );
+    /* UI elements */
+    private CoordinatorLayout mCoordinatorLayout;
+    private FloatingActionButton mPowerImageButton;
+    private ImageButton mUpArrowImageButton;
+    private ImageButton mLeftArrowImageButton;
+    private ImageButton mRightArrowImageButton;
+    private ImageButton mDownArrowImageButton;
 
-    private static final String macAddress = "00:13:EF:00:0E:5F";
+    /* Animators */
+    private ObjectAnimator mPulseAnimator;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -41,112 +53,187 @@ public class MainActivity extends AppCompatActivity
 
         setContentView(R.layout.activity_main);
 
-        if ( D )
-            Log.e(TAG, "-- Creating Activty --");
+        CONNECTED = false;
+        PRESSED = false;
 
-        mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter( );
-        if ( mBluetoothAdapter == null )
+        mCoordinatorLayout     = (CoordinatorLayout) findViewById(R.id.coordinator_layout);
+        mPowerImageButton      = (FloatingActionButton) findViewById(R.id.powerImageButton);
+        mUpArrowImageButton    = (ImageButton) findViewById(R.id.upArrowImageButton);
+        mDownArrowImageButton  = (ImageButton) findViewById(R.id.downArrowImageButton);
+        mLeftArrowImageButton  = (ImageButton) findViewById(R.id.leftArrowImageButton);
+        mRightArrowImageButton = (ImageButton) findViewById(R.id.rightArrowImageButton);
+
+        mUpArrowImageButton.setOnTouchListener(this);
+        mRightArrowImageButton.setOnTouchListener(this);
+        mLeftArrowImageButton.setOnTouchListener(this);
+        mDownArrowImageButton.setOnTouchListener(this);
+
+        mPowerImageButton.setOnClickListener(new View.OnClickListener()
         {
-            Toast.makeText(this
-                    , "Bluetooth is not available"
-                    , Toast.LENGTH_SHORT).show();
+            @Override
+            public void onClick(View v)
+            {
+                if (!CONNECTED)
+                {
+                    new ConnectThread().execute();
+                }
+            }
+        });
 
-            finish( );
-            return;
+        mPulseAnimator = ObjectAnimator.ofPropertyValuesHolder(mPowerImageButton
+                                                        , PropertyValuesHolder.ofFloat("scaleX", 1.2f)
+                                                        , PropertyValuesHolder.ofFloat("scaleY", 1.2f));
+        mPulseAnimator.setDuration(310);
+        mPulseAnimator.setRepeatCount(ObjectAnimator.INFINITE);
+        mPulseAnimator.setRepeatMode(ObjectAnimator.REVERSE);
+
+        // Turn on Bluetooth
+        mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+
+        if (!mBluetoothAdapter.isEnabled())
+        {
+            Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
         }
-
-        if ( !mBluetoothAdapter.isEnabled( ) )
-            mBluetoothAdapter.enable( );
-
-        if ( D )
-            Log.e( TAG , "-- Done (Bluetooth activated) --");
     }
 
     @Override
-    public void onStart( )
+    public void onDestroy()
     {
-        super.onStart( );
-        if ( D )
-            Log.e( TAG, "-- Starting --");
+        super.onDestroy();
 
-    } // onStart
+        if (mBluetoothAdapter.isEnabled())
+        {
+            mBluetoothAdapter.disable();
+        }
+    }
 
     @Override
-    public void onResume( )
+    public boolean onTouch(View v, MotionEvent event)
     {
-        super.onResume( );
-        if ( D )
+        switch (v.getId())
         {
-            Log.e( TAG, "-- Resuming --");
-            Log.e( TAG, "-- Attempting to connect --" );
+            case (R.id.upArrowImageButton):
+                _animateArrow(mUpArrowImageButton, event);
+                break;
+
+            case (R.id.downArrowImageButton):
+                _animateArrow(mDownArrowImageButton, event);
+                break;
+
+            case (R.id.leftArrowImageButton):
+                _animateArrow(mLeftArrowImageButton, event);
+                break;
+
+            case (R.id.rightArrowImageButton):
+                _animateArrow(mRightArrowImageButton, event);
+                break;
         }
 
-        BluetoothDevice mDevice = mBluetoothAdapter.getRemoteDevice( macAddress );
+        return true;
+    }
 
-        try
+    private void _animateArrow(ImageButton arrow, MotionEvent event)
+    {
+        if (event.getAction() == MotionEvent.ACTION_DOWN)
         {
-            btSocket = mDevice.createRfcommSocketToServiceRecord( MY_UUID );
+            if (!PRESSED)
+            {
+                PRESSED = true;
 
-        } catch ( IOException e ) {
-            Log.e ( TAG, "-- Unable to create socket --" );
+                arrow.animate().scaleX(1.3f)
+                               .scaleY(1.3f)
+                               .setDuration(200)
+                               .start();
+                arrow.setBackgroundTintList(
+                        ColorStateList.valueOf(
+                                this.getColor(android.R.color.holo_blue_bright)));
+            }
+
+        } else if (event.getAction() == MotionEvent.ACTION_UP) {
+            PRESSED = false;
+
+            arrow.animate().scaleX(1.0f)
+                           .scaleY(1.0f)
+                           .setDuration(200)
+                           .start();
+            arrow.setBackgroundTintList(
+                    ColorStateList.valueOf(
+                            this.getColor(R.color.colorAccent)));
+        }
+    }
+
+    /**
+     * AsyncTask which connects to the Arduino
+     */
+    private class ConnectThread extends AsyncTask<Void, Void, Void>
+    {
+        private BluetoothSocket mSocket;
+        private BluetoothDevice mDevice;
+
+        @Override
+        protected void onPreExecute()
+        {
+            mPulseAnimator.start();
+
+            mDevice = mBluetoothAdapter.getRemoteDevice(MAC_ADDRESS);
+
+            try
+            {
+                // MY_UUID is the app's UUID string
+                mSocket = mDevice.createInsecureRfcommSocketToServiceRecord(MY_UUID);
+
+            } catch (IOException e) {
+                Log.e(TAG, "Error creating RFCOMM socket");
+            }
         }
 
-        mBluetoothAdapter.cancelDiscovery( );
-
-        try {
-            btSocket.connect( );
-            os = btSocket.getOutputStream( );
-
-            Log.e( TAG , "-- Bluetooth connection established --");
-
-            Toast.makeText( this
-                    , "Connection established"
-                    , Toast.LENGTH_SHORT ).show();
-
-        } catch ( IOException e ) {
-            try {
-                btSocket.close( );
-
-            } catch ( IOException e1 ) {
-                Log.e( TAG, "-- Unable to close socket --" );
-            }
-        } // catch
-
-        if ( D )
-            Log.e( TAG, "-- About to send something to Arduino --");
-
-    } // onResume
-
-    @Override
-    public void onPause( )
-    {
-        super.onPause( );
-
-        if ( D )
-            Log.e( TAG, "-- Pausing activity --" );
-
-        if ( os != null )
+        @Override
+        protected Void doInBackground(Void... params)
         {
-            try {
-                btSocket.close( );
-                os.flush( );
+            try
+            {
+                // Connect the device through the socket. This will block
+                // until it succeeds or throws an exception
+                Log.d(TAG, "Connecting...");
 
-            } catch ( IOException e ) {
-                Log.e( TAG, "-- Unable to close socket --" );
+                mSocket.connect();
+
+                CONNECTED = true;
+
+                Log.d(TAG, "Connected!");
+
+            } catch (IOException connectException) {
+                Log.e(TAG, "Error connectig to the Arduino");
+
+                try
+                {
+                    mSocket.close();
+
+                } catch (IOException closeException) {
+                    Log.e(TAG, "Error closing the socket");
+                }
+
             }
-        } // if
 
-        if ( this.isFinishing( ) )
-            mBluetoothAdapter.disable( );
+            return null;
+        }
 
-    } // onPause
+        @Override
+        protected void onPostExecute(Void v)
+        {
+            mPulseAnimator.cancel();
 
-    @Override
-    public void onDestroy( )
-    {
-        super.onDestroy( );
-        if ( D )
-            Log.e( TAG, " -- Destroying activity --" );
+            if (CONNECTED)
+            {
+                Snackbar.make(mCoordinatorLayout, "Conectado", Snackbar.LENGTH_SHORT).show();
 
-    } // onDestroy
+                mPowerImageButton.setBackgroundTintList(
+                        ColorStateList.valueOf(
+                                getColor(R.color.colorLightGreen)));
+            } else {
+                Snackbar.make(mCoordinatorLayout, "Error al conectar", Snackbar.LENGTH_SHORT).show();
+            }
+        }
+    }
 }
