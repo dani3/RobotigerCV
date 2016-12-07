@@ -1,170 +1,150 @@
+#include <VarSpeedServo.h>
+
 /* ---------------------------- */
-// ROVER 5 CODE                 //
-// AUTHOR: DANIEL MANCEBO       //
-// DATE: 01/10/2013             //
+/* ROVER 5 CODE                 */
+/* AUTHOR: DANIEL MANCEBO       */
+/* DATE: 01/10/2013             */
 /* ---------------------------- */
 
-#include <SoftwareSerial.h>   
+#define DIR_L      4      // Left motor polarity
+#define MOTOR_L    5      // Left motor PIN
+#define MOTOR_R    6      // Right motor PIN
+#define DIR_R      7      // Right motor polarity
 
-#define RxD 2                
-#define TxD 3
+#define BACK          0     // Move back command 
+#define TURN_RIGHT    1     // Turn right command
+#define TURN_LEFT     2     // TUrn left command
+#define FORWARD       3     // Move forward command
 
-#define DIR_L    4      // Polaridad del motor izquierdo
-#define MOTOR_L  5      // PWM Pin del motor izquierdo
-#define MOTOR_R  6      // PWM Pin del motor derecho
-#define DIR_R    7      // Polaridad del motor derecho
+#define NUMBER_OF_SERVOS    5
+#define PIN_OFFSET          8
 
-SoftwareSerial bluetoothSerial(RxD, TxD);
-  
-/**  
- * Funcion que detiene los motores
- */
-void halt(void) 
+#define GET_SERVO_PIN(_pos) (_pos + PIN_OFFSET)
+
+// Command received from Android app
+char _command;
+
+// Array of servos to control the robotic arm
+VarSpeedServo _servos[NUMBER_OF_SERVOS];
+
+
+void _halt(void) 
 {                                
-   analogWrite(MOTOR_R, 0);
-   analogWrite(MOTOR_L, 0);
+  analogWrite(MOTOR_R, 0);
+  analogWrite(MOTOR_L, 0);
    
-   delay(100);
+  delay(100);
 }
 
-/**
- * Funcion que mueve los motores dependiendo del parametro de entrada
- */
-void motors (short int y) 
+
+void _move(short int y) 
 {          
-  if (y == 0) 
-  {                               // 0 = retroceder
-     digitalWrite(DIR_R, HIGH);
-     digitalWrite(DIR_L, HIGH);
-     analogWrite(MOTOR_R, 80);
-     analogWrite(MOTOR_L, 80);
+  if (y == BACK) 
+  {                               
+    digitalWrite(DIR_R, HIGH);
+    digitalWrite(DIR_L, HIGH);
+    analogWrite(MOTOR_R, 80);
+    analogWrite(MOTOR_L, 80);
      
-  } else if (y == 1) 
-  {                               // 1 = girar derecha
-     digitalWrite(DIR_R, LOW);
-     digitalWrite(DIR_L, LOW);
-     analogWrite(MOTOR_R, 0);
-     analogWrite(MOTOR_L, 100);
+  } else if (y == TURN_RIGHT) 
+  {                               
+    digitalWrite(DIR_R, HIGH);
+    digitalWrite(DIR_L, LOW);
+    analogWrite(MOTOR_R, 100);
+    analogWrite(MOTOR_L, 100);
      
-  } else if (y == 2) 
-  {                               // 2 = girar izquierda
-     digitalWrite(DIR_R, LOW);
-     digitalWrite(DIR_L, LOW);
-     analogWrite(MOTOR_R, 100);
-     analogWrite(MOTOR_L, 0);
+  } else if (y == TURN_LEFT) 
+  {                              
+    digitalWrite(DIR_R, LOW);
+    digitalWrite(DIR_L, HIGH);
+    analogWrite(MOTOR_R, 100);
+    analogWrite(MOTOR_L, 100);
      
-  } else if (y == 3) 
-  {                               // 3 = avanzar
-     digitalWrite(DIR_R, LOW );
-     digitalWrite(DIR_L, LOW );
-     analogWrite(MOTOR_R, 150 );
-     analogWrite(MOTOR_L, 150 ); 
+  } else if (y == FORWARD) 
+  {                              
+    digitalWrite(DIR_R, LOW );
+    digitalWrite(DIR_L, LOW );
+    analogWrite(MOTOR_R, 150 );
+    analogWrite(MOTOR_L, 150 ); 
   }
 }
+
 
 void setupBlueToothConnection()
 {
-    bluetoothSerial.begin(38400); 
-    
-    delay(1000);
-    
-    sendBlueToothCommand("\r\n+STWMOD=0\r\n");                // 0 = slave
-    sendBlueToothCommand("\r\n+STNA=SedBlutoth-st_XX\r\n" ); 
-    sendBlueToothCommand("\r\n+STAUTO=0\r\n");                // 0 = Auto-connect forbidden
-    sendBlueToothCommand("\r\n+STOAUT=1\r\n");                // 1 = Permit Paired device to connect me
-    sendBlueToothCommand("\r\n+STPIN=0000\r\n");
-    
-    delay(2000); // This delay is required.
-    
-    sendBlueToothCommand("\r\n+INQ=1\r\n");        // 1 = Enable been inquired (slave)
-    
-    delay(2000); // This delay is required.
-    
-    bluetoothSerial.print("You are connected!");
-}
+  // Set BluetoothBee BaudRate to default baud rate 38400
+  Serial.begin(38400);     
+                     
+  // Set the bluetooth work in slave mode
+  Serial.print("\r\n+STWMOD=0\r\n");     
+  // Set the bluetooth name as "SeeedBTSlave"     
+  Serial.print("\r\n+STNA=SeeedBTSlave\r\n"); 
+  // Permit Paired device to connect me
+  Serial.print("\r\n+STOAUT=1\r\n");    
+  // Auto-connection should be forbidden here      
+  Serial.print("\r\n+STAUTO=0\r\n");          
 
-void checkOK() 
-{
-  char a, b;
+  // This delay is required.
+  delay(2000); 
   
-  while (1) 
-  {
-    if (bluetoothSerial.available())
-    {
-      a = bluetoothSerial.read();
-// ************************************* debug ********************************************
-      Serial.write(a);    // show response from bluetooth module
+  // Make the slave bluetooth inquirable 
+  Serial.print("\r\n+INQ=1\r\n"); 
 
-      if ('O' == a)
-      {
-        // Wait for next character K. available() is required in some cases, as K is not immediately available.
-        while (bluetoothSerial.available())
-        {
-           b = bluetoothSerial.read();
-          
-  // ************************************* debug ********************************************
-           Serial.write(b);         
-           break;
-        }
-        
-        if ('K' == b)
-        {
-          break;
-        }
-      }
-    }
-  }
-
-  while((a = bluetoothSerial.read()) != -1)
-  {
-    // Wait until all other response chars are received
-  }
+  // This delay is required.
+  delay(2000); 
+  
+  Serial.flush();  
 }
 
-void sendBlueToothCommand(char command[])
-{
-    bluetoothSerial.print(command);
-    checkOK( );   
-}
 
 void setup() 
 {
-   pinMode(DIR_R, OUTPUT);
-   pinMode(DIR_L, OUTPUT);
-   pinMode(MOTOR_R, OUTPUT);
-   pinMode(MOTOR_L, OUTPUT);
+  for (int i = 0; i < NUMBER_OF_SERVOS; i++)
+  {
+    _servos[i].attach(GET_SERVO_PIN(i));
+  }
+
+  pinMode(DIR_R, OUTPUT);
+  pinMode(DIR_L, OUTPUT);
+  pinMode(MOTOR_R, OUTPUT);
+  pinMode(MOTOR_L, OUTPUT);
+  
+  digitalWrite(MOTOR_R, 0);
+  digitalWrite(MOTOR_L, 0);
    
-   pinMode(RxD, INPUT);
-   pinMode(TxD, OUTPUT);
-   
-   Serial.begin(9600);
-   setupBlueToothConnection();  
+  setupBlueToothConnection(); 
+  Serial.flush();  
 }
 
+
 void loop() 
-{
-    if (bluetoothSerial.available( ))
+{    
+  if (Serial.available())
+  {
+    _command = (char)Serial.read();
+    Serial.flush();
+        
+    switch (_command) 
     {
-        char command = (char)bluetoothSerial.read();
-        bluetoothSerial.flush();
+      case 'x':              // Move back
+        _move(BACK);         
+        break;    
             
-        switch (command) 
-        {
-          case 'x':
-              motors(0);         
-              break;      
-          case 'd':
-              motors(1);         
-              break;      
-          case 'a':
-              motors(2);          
-              break;      
-          case 'w':
-              motors(3);       
-              break;      
-          case 's':
-              halt();         
-              break;  
-        } // switch
+      case 'd':              // Turn right
+        _move(TURN_RIGHT);         
+        break;   
+             
+      case 'a':              // Turn left
+        _move(TURN_LEFT);          
+        break;  
+              
+      case 'w':              // Move forward
+        _move(FORWARD);       
+        break; 
+              
+      case 's':              // Stop
+        _halt();         
+        break;  
     }
-} // loop
+  }
+}

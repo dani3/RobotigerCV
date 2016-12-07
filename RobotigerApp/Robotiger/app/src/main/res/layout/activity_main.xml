@@ -7,16 +7,20 @@
     android:background="@drawable/background">
 
     <RelativeLayout
-        android:layout_width="300dp"
-        android:layout_height="300dp"
-        android:layout_gravity="center"
+        android:layout_width="225dp"
+        android:layout_height="225dp"
+        android:layout_gravity="top|start"
         android:background="@drawable/diamond"
+        android:layout_marginTop="52dp"
+        android:layout_marginBottom="52dp"
+        android:layout_marginLeft="32dp"
+        android:layout_marginRight="52dp"
         android:backgroundTint="@color/colorAccent">
 
         <ImageButton
             android:id="@+id/upArrowImageButton"
-            android:layout_width="74dp"
-            android:layout_height="74dp"
+            android:layout_width="54dp"
+            android:layout_height="54dp"
             android:background="@drawable/up_arrow"
             android:backgroundTint="@color/colorAccent"
             android:layout_centerHorizontal="true"
@@ -24,8 +28,8 @@
 
         <ImageButton
             android:id="@+id/downArrowImageButton"
-            android:layout_width="74dp"
-            android:layout_height="74dp"
+            android:layout_width="54dp"
+            android:layout_height="54dp"
             android:background="@drawable/down_arrow"
             android:backgroundTint="@color/colorAccent"
             android:layout_centerHorizontal="true"
@@ -34,8 +38,8 @@
 
         <ImageButton
             android:id="@+id/leftArrowImageButton"
-            android:layout_width="74dp"
-            android:layout_height="74dp"
+            android:layout_width="54dp"
+            android:layout_height="54dp"
             android:background="@drawable/left_arrow"
             android:backgroundTint="@color/colorAccent"
             android:layout_centerVertical="true"
@@ -43,13 +47,169 @@
 
         <ImageButton
             android:id="@+id/rightArrowImageButton"
-            android:layout_width="74dp"
-            android:layout_height="74dp"
+            android:layout_width="54dp"
+            android:layout_height="54dp"
             android:background="@drawable/right_arrow"
             android:backgroundTint="@color/colorAccent"
             android:layout_centerVertical="true"
             android:layout_alignParentEnd="true"
             android:layout_marginRight="16dp"/>
+
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:layout_width="258dp"
+        android:layout_height="278dp"
+        android:layout_gravity="right"
+        android:layout_marginRight="52dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:weightSum="1">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="0.75"
+                android:layout_marginBottom="16dp"
+                android:orientation="vertical"
+                android:background="@drawable/square_border"
+                android:weightSum="1">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="0.5"
+                    android:gravity="top|center_horizontal">
+
+                    <ImageButton
+                        android:id="@+id/moveArmForward"
+                        android:layout_width="34dp"
+                        android:layout_height="34dp"
+                        android:layout_marginTop="16dp"
+                        android:background="@drawable/up_arrow"
+                        android:backgroundTint="@color/colorAccent"/>
+
+                    <ImageButton
+                        android:id="@+id/moveForeArmForward"
+                        android:layout_width="34dp"
+                        android:layout_height="34dp"
+                        android:layout_marginTop="16dp"
+                        android:layout_marginLeft="12dp"
+                        android:background="@drawable/up_arrow"
+                        android:backgroundTint="@color/colorAccent"/>
+
+                    <ImageButton
+                        android:id="@+id/moveWristForward"
+                        android:layout_width="34dp"
+                        android:layout_height="34dp"
+                        android:layout_marginTop="16dp"
+                        android:layout_marginLeft="12dp"
+                        android:background="@drawable/up_arrow"
+                        android:backgroundTint="@color/colorAccent"/>
+
+                    <ImageButton
+                        android:id="@+id/rotateRightWrist"
+                        android:layout_width="34dp"
+                        android:layout_height="34dp"
+                        android:layout_marginTop="16dp"
+                        android:layout_marginLeft="12dp"
+                        android:background="@drawable/up_arrow"
+                        android:backgroundTint="@color/colorAccent"/>
+
+                    <ImageButton
+                        android:id="@+id/grab"
+                        android:layout_width="34dp"
+                        android:layout_height="34dp"
+                        android:layout_marginTop="16dp"
+                        android:layout_marginLeft="12dp"
+                        android:background="@drawable/up_arrow"
+                        android:backgroundTint="@color/colorAccent"/>
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="0.5"
+                    android:gravity="bottom|center_horizontal">
+
+                    <ImageButton
+                        android:id="@+id/moveArmBackwards"
+                        android:layout_width="34dp"
+                        android:layout_height="34dp"
+                        android:layout_marginBottom="16dp"
+                        android:background="@drawable/down_arrow"
+                        android:backgroundTint="@color/colorAccent"/>
+
+                    <ImageButton
+                        android:id="@+id/moveForeArmBackwards"
+                        android:layout_width="34dp"
+                        android:layout_height="34dp"
+                        android:layout_marginBottom="16dp"
+                        android:layout_marginLeft="12dp"
+                        android:background="@drawable/down_arrow"
+                        android:backgroundTint="@color/colorAccent"/>
+
+                    <ImageButton
+                        android:id="@+id/moveWristBackwards"
+                        android:layout_width="34dp"
+                        android:layout_height="34dp"
+                        android:layout_marginBottom="16dp"
+                        android:layout_marginLeft="12dp"
+                        android:background="@drawable/down_arrow"
+                        android:backgroundTint="@color/colorAccent"/>
+
+                    <ImageButton
+                        android:id="@+id/rotateLeftWrist"
+                        android:layout_width="34dp"
+                        android:layout_height="34dp"
+                        android:layout_marginBottom="16dp"
+                        android:layout_marginLeft="12dp"
+                        android:background="@drawable/down_arrow"
+                        android:backgroundTint="@color/colorAccent"/>
+
+                    <ImageButton
+                        android:id="@+id/release"
+                        android:layout_width="34dp"
+                        android:layout_height="34dp"
+                        android:layout_marginBottom="16dp"
+                        android:layout_marginLeft="12dp"
+                        android:background="@drawable/down_arrow"
+                        android:backgroundTint="@color/colorAccent"/>
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="0.25"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:background="@drawable/square_border">
+
+                <ImageButton
+                    android:id="@+id/rotateLeft"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_marginRight="144dp"
+                    android:background="@drawable/left_arrow"
+                    android:backgroundTint="@color/colorAccent"/>
+
+                <ImageButton
+                    android:id="@+id/rotateRight"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:background="@drawable/right_arrow"
+                    android:backgroundTint="@color/colorAccent"/>
+
+            </LinearLayout>
+
+        </LinearLayout>
 
     </RelativeLayout>
 

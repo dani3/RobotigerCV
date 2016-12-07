@@ -16,10 +16,10 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.animation.Animation;
 import android.widget.ImageButton;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.UUID;
 
 public class MainActivity extends AppCompatActivity implements View.OnTouchListener
@@ -30,10 +30,28 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
     private static final String MAC_ADDRESS = "00:13:EF:00:0E:5F";
     private static final int REQUEST_ENABLE_BT = 1;
     private static boolean CONNECTED;
-    private static boolean PRESSED;
+    private static boolean MOVING;
+    private static boolean ROTATING;
+
+    /* Commands */
+    private static byte MOVE_FORWARD   = 'w';
+    private static byte MOVE_LEFT      = 'a';
+    private static byte MOVE_RIGHT     = 'd';
+    private static byte MOVE_BACKWARDS = 'x';
+    private static byte HALT           = 's';
+
+    private static byte ROTATE_RIGHT = 'e';
+    private static byte ROTATE_LEFT  = 'q';
+    private static byte ROTATE_STOP  = 'z';
 
     /* Bluetooth Adapter */
     private static BluetoothAdapter mBluetoothAdapter;
+
+    /* Bluetooth device / socket */
+    private static BluetoothSocket mSocket;
+    private static BluetoothDevice mDevice;
+
+    private static OutputStream os;
 
     /* UI elements */
     private CoordinatorLayout mCoordinatorLayout;
@@ -42,6 +60,8 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
     private ImageButton mLeftArrowImageButton;
     private ImageButton mRightArrowImageButton;
     private ImageButton mDownArrowImageButton;
+    private ImageButton mRotateRightImageButton;
+    private ImageButton mRotateLeftImageButton;
 
     /* Animators */
     private ObjectAnimator mPulseAnimator;
@@ -54,19 +74,24 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
         setContentView(R.layout.activity_main);
 
         CONNECTED = false;
-        PRESSED = false;
+        MOVING    = false;
+        ROTATING  = false;
 
-        mCoordinatorLayout     = (CoordinatorLayout) findViewById(R.id.coordinator_layout);
-        mPowerImageButton      = (FloatingActionButton) findViewById(R.id.powerImageButton);
-        mUpArrowImageButton    = (ImageButton) findViewById(R.id.upArrowImageButton);
-        mDownArrowImageButton  = (ImageButton) findViewById(R.id.downArrowImageButton);
-        mLeftArrowImageButton  = (ImageButton) findViewById(R.id.leftArrowImageButton);
-        mRightArrowImageButton = (ImageButton) findViewById(R.id.rightArrowImageButton);
+        mCoordinatorLayout      = (CoordinatorLayout) findViewById(R.id.coordinator_layout);
+        mPowerImageButton       = (FloatingActionButton) findViewById(R.id.powerImageButton);
+        mUpArrowImageButton     = (ImageButton) findViewById(R.id.upArrowImageButton);
+        mDownArrowImageButton   = (ImageButton) findViewById(R.id.downArrowImageButton);
+        mLeftArrowImageButton   = (ImageButton) findViewById(R.id.leftArrowImageButton);
+        mRightArrowImageButton  = (ImageButton) findViewById(R.id.rightArrowImageButton);
+        mRotateLeftImageButton  = (ImageButton) findViewById(R.id.rotateLeft);
+        mRotateRightImageButton = (ImageButton) findViewById(R.id.rotateRight);
 
         mUpArrowImageButton.setOnTouchListener(this);
         mRightArrowImageButton.setOnTouchListener(this);
         mLeftArrowImageButton.setOnTouchListener(this);
         mDownArrowImageButton.setOnTouchListener(this);
+        mRotateLeftImageButton.setOnTouchListener(this);
+        mRotateRightImageButton.setOnTouchListener(this);
 
         mPowerImageButton.setOnClickListener(new View.OnClickListener()
         {
@@ -75,7 +100,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
             {
                 if (!CONNECTED)
                 {
-                    new ConnectThread().execute();
+                    new BluetoothConnectionTask().execute();
                 }
             }
         });
@@ -87,7 +112,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
         mPulseAnimator.setRepeatCount(ObjectAnimator.INFINITE);
         mPulseAnimator.setRepeatMode(ObjectAnimator.REVERSE);
 
-        // Turn on Bluetooth
+        // Turn on Bluetooth.
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 
         if (!mBluetoothAdapter.isEnabled())
@@ -106,6 +131,17 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
         {
             mBluetoothAdapter.disable();
         }
+
+        if (os != null)
+        {
+            try
+            {
+                os.close();
+
+            } catch (IOException e) {
+                Log.d(TAG, "Error closing outputStream: " + e.getMessage());
+            }
+        }
     }
 
     @Override
@@ -114,32 +150,46 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
         switch (v.getId())
         {
             case (R.id.upArrowImageButton):
-                _animateArrow(mUpArrowImageButton, event);
+                _move(mUpArrowImageButton, event, MOVE_FORWARD);
                 break;
 
             case (R.id.downArrowImageButton):
-                _animateArrow(mDownArrowImageButton, event);
+                _move(mDownArrowImageButton, event, MOVE_BACKWARDS);
                 break;
 
             case (R.id.leftArrowImageButton):
-                _animateArrow(mLeftArrowImageButton, event);
+                _move(mLeftArrowImageButton, event, MOVE_LEFT);
                 break;
 
             case (R.id.rightArrowImageButton):
-                _animateArrow(mRightArrowImageButton, event);
+                _move(mRightArrowImageButton, event, MOVE_RIGHT);
+                break;
+
+            case (R.id.rotateLeft):
+                _rotate(mRotateLeftImageButton, event, ROTATE_LEFT);
+                break;
+
+            case (R.id.rotateRight):
+                _rotate(mRotateRightImageButton, event, ROTATE_RIGHT);
                 break;
         }
 
         return true;
     }
 
-    private void _animateArrow(ImageButton arrow, MotionEvent event)
+    /**
+     * Method to move the robot.
+     * @param arrow: button actioned.
+     * @param event: event triggered.
+     * @param command: command to be sent to Arduino.
+     */
+    private void _move(ImageButton arrow, MotionEvent event, byte command)
     {
         if (event.getAction() == MotionEvent.ACTION_DOWN)
         {
-            if (!PRESSED)
+            if (!ROTATING)
             {
-                PRESSED = true;
+                ROTATING = true;
 
                 arrow.animate().scaleX(1.3f)
                                .scaleY(1.3f)
@@ -148,10 +198,12 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                 arrow.setBackgroundTintList(
                         ColorStateList.valueOf(
                                 this.getColor(android.R.color.holo_blue_bright)));
+
+                _sendCommand(command);
             }
 
         } else if (event.getAction() == MotionEvent.ACTION_UP) {
-            PRESSED = false;
+            ROTATING = false;
 
             arrow.animate().scaleX(1.0f)
                            .scaleY(1.0f)
@@ -160,17 +212,77 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
             arrow.setBackgroundTintList(
                     ColorStateList.valueOf(
                             this.getColor(R.color.colorAccent)));
+
+            // When released, stop the robot.
+            _sendCommand(HALT);
         }
     }
 
     /**
-     * AsyncTask which connects to the Arduino
+     * Method to rotate the robotic arm.
+     * @param arrow: arrow pressed.
+     * @param event: event triggered.
+     * @param command: command to be sent to Arduino.
      */
-    private class ConnectThread extends AsyncTask<Void, Void, Void>
+    private void _rotate(ImageButton arrow, MotionEvent event, byte command)
     {
-        private BluetoothSocket mSocket;
-        private BluetoothDevice mDevice;
+        if (event.getAction() == MotionEvent.ACTION_DOWN)
+        {
+            if (!MOVING)
+            {
+                MOVING = true;
 
+                arrow.animate().scaleX(1.2f)
+                        .scaleY(1.2f)
+                        .setDuration(200)
+                        .start();
+                arrow.setBackgroundTintList(
+                        ColorStateList.valueOf(
+                                this.getColor(android.R.color.holo_blue_bright)));
+
+                _sendCommand(command);
+            }
+
+        } else if (event.getAction() == MotionEvent.ACTION_UP) {
+            MOVING = false;
+
+            arrow.animate().scaleX(1.0f)
+                    .scaleY(1.0f)
+                    .setDuration(200)
+                    .start();
+            arrow.setBackgroundTintList(
+                    ColorStateList.valueOf(
+                            this.getColor(R.color.colorAccent)));
+
+            // When released, stop the rotation.
+            _sendCommand(ROTATE_STOP);
+        }
+    }
+
+    /**
+     * Method to send a command to Arduino.
+     * @param command: command to be processed by Arduino.
+     */
+    private void _sendCommand(byte command)
+    {
+        if (CONNECTED)
+        {
+            try
+            {
+                os.write(command);
+                os.flush();
+
+            } catch (IOException e) {
+                Log.e(TAG, "Error mandando comando: " + e.getMessage());
+            }
+        }
+    }
+
+    /**
+     * AsyncTask which connects to the Arduino.
+     */
+    private class BluetoothConnectionTask extends AsyncTask<Void, Void, Void>
+    {
         @Override
         protected void onPreExecute()
         {
@@ -199,12 +311,14 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
 
                 mSocket.connect();
 
+                os = mSocket.getOutputStream();
+
                 CONNECTED = true;
 
                 Log.d(TAG, "Connected!");
 
             } catch (IOException connectException) {
-                Log.e(TAG, "Error connectig to the Arduino");
+                Log.e(TAG, "Error connecting to Arduino");
 
                 try
                 {
@@ -226,13 +340,13 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
 
             if (CONNECTED)
             {
-                Snackbar.make(mCoordinatorLayout, "Conectado", Snackbar.LENGTH_SHORT).show();
+                Snackbar.make(mCoordinatorLayout, "Connected", Snackbar.LENGTH_SHORT).show();
 
                 mPowerImageButton.setBackgroundTintList(
                         ColorStateList.valueOf(
                                 getColor(R.color.colorLightGreen)));
             } else {
-                Snackbar.make(mCoordinatorLayout, "Error al conectar", Snackbar.LENGTH_SHORT).show();
+                Snackbar.make(mCoordinatorLayout, "Error connecting", Snackbar.LENGTH_SHORT).show();
             }
         }
     }
