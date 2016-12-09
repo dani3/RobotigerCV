@@ -74,113 +74,43 @@
                 android:layout_height="0dp"
                 android:layout_weight="0.75"
                 android:layout_marginBottom="16dp"
-                android:orientation="vertical"
-                android:background="@drawable/square_border"
-                android:weightSum="1">
+                android:gravity="center_vertical"
+                android:orientation="vertical">
 
-                <LinearLayout
+                <android.support.v7.widget.AppCompatSeekBar
                     android:layout_width="match_parent"
-                    android:layout_height="0dp"
-                    android:layout_weight="0.5"
-                    android:gravity="top|center_horizontal">
+                    android:layout_height="28dp"
+                    android:layout_marginLeft="16dp"
+                    android:layout_marginRight="16dp"/>
 
-                    <ImageButton
-                        android:id="@+id/moveArmForward"
-                        android:layout_width="34dp"
-                        android:layout_height="34dp"
-                        android:layout_marginTop="16dp"
-                        android:background="@drawable/up_arrow"
-                        android:backgroundTint="@color/colorAccent"/>
-
-                    <ImageButton
-                        android:id="@+id/moveForeArmForward"
-                        android:layout_width="34dp"
-                        android:layout_height="34dp"
-                        android:layout_marginTop="16dp"
-                        android:layout_marginLeft="12dp"
-                        android:background="@drawable/up_arrow"
-                        android:backgroundTint="@color/colorAccent"/>
-
-                    <ImageButton
-                        android:id="@+id/moveWristForward"
-                        android:layout_width="34dp"
-                        android:layout_height="34dp"
-                        android:layout_marginTop="16dp"
-                        android:layout_marginLeft="12dp"
-                        android:background="@drawable/up_arrow"
-                        android:backgroundTint="@color/colorAccent"/>
-
-                    <ImageButton
-                        android:id="@+id/rotateRightWrist"
-                        android:layout_width="34dp"
-                        android:layout_height="34dp"
-                        android:layout_marginTop="16dp"
-                        android:layout_marginLeft="12dp"
-                        android:background="@drawable/up_arrow"
-                        android:backgroundTint="@color/colorAccent"/>
-
-                    <ImageButton
-                        android:id="@+id/grab"
-                        android:layout_width="34dp"
-                        android:layout_height="34dp"
-                        android:layout_marginTop="16dp"
-                        android:layout_marginLeft="12dp"
-                        android:background="@drawable/up_arrow"
-                        android:backgroundTint="@color/colorAccent"/>
-
-                </LinearLayout>
-
-                <LinearLayout
+                <android.support.v7.widget.AppCompatSeekBar
                     android:layout_width="match_parent"
-                    android:layout_height="0dp"
-                    android:layout_weight="0.5"
-                    android:gravity="bottom|center_horizontal">
+                    android:layout_height="28dp"
+                    android:layout_marginLeft="16dp"
+                    android:layout_marginRight="16dp"
+                    android:layout_marginTop="8dp"/>
 
-                    <ImageButton
-                        android:id="@+id/moveArmBackwards"
-                        android:layout_width="34dp"
-                        android:layout_height="34dp"
-                        android:layout_marginBottom="16dp"
-                        android:background="@drawable/down_arrow"
-                        android:backgroundTint="@color/colorAccent"/>
+                <android.support.v7.widget.AppCompatSeekBar
+                    android:layout_width="match_parent"
+                    android:layout_height="28dp"
+                    android:layout_marginLeft="16dp"
+                    android:layout_marginRight="16dp"
+                    android:layout_marginTop="8dp"/>
 
-                    <ImageButton
-                        android:id="@+id/moveForeArmBackwards"
-                        android:layout_width="34dp"
-                        android:layout_height="34dp"
-                        android:layout_marginBottom="16dp"
-                        android:layout_marginLeft="12dp"
-                        android:background="@drawable/down_arrow"
-                        android:backgroundTint="@color/colorAccent"/>
+                <android.support.v7.widget.AppCompatSeekBar
+                    android:id="@+id/wrist"
+                    android:layout_width="match_parent"
+                    android:layout_height="28dp"
+                    android:layout_marginLeft="16dp"
+                    android:layout_marginRight="16dp"
+                    android:layout_marginTop="8dp"/>
 
-                    <ImageButton
-                        android:id="@+id/moveWristBackwards"
-                        android:layout_width="34dp"
-                        android:layout_height="34dp"
-                        android:layout_marginBottom="16dp"
-                        android:layout_marginLeft="12dp"
-                        android:background="@drawable/down_arrow"
-                        android:backgroundTint="@color/colorAccent"/>
-
-                    <ImageButton
-                        android:id="@+id/rotateLeftWrist"
-                        android:layout_width="34dp"
-                        android:layout_height="34dp"
-                        android:layout_marginBottom="16dp"
-                        android:layout_marginLeft="12dp"
-                        android:background="@drawable/down_arrow"
-                        android:backgroundTint="@color/colorAccent"/>
-
-                    <ImageButton
-                        android:id="@+id/release"
-                        android:layout_width="34dp"
-                        android:layout_height="34dp"
-                        android:layout_marginBottom="16dp"
-                        android:layout_marginLeft="12dp"
-                        android:background="@drawable/down_arrow"
-                        android:backgroundTint="@color/colorAccent"/>
-
-                </LinearLayout>
+                <android.support.v7.widget.AppCompatSeekBar
+                    android:layout_width="match_parent"
+                    android:layout_height="28dp"
+                    android:layout_marginLeft="16dp"
+                    android:layout_marginRight="16dp"
+                    android:layout_marginTop="8dp"/>
 
             </LinearLayout>
 
@@ -189,8 +119,7 @@
                 android:layout_height="0dp"
                 android:layout_weight="0.25"
                 android:orientation="horizontal"
-                android:gravity="center"
-                android:background="@drawable/square_border">
+                android:gravity="center">
 
                 <ImageButton
                     android:id="@+id/rotateLeft"

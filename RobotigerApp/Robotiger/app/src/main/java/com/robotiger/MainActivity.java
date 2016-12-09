@@ -17,6 +17,7 @@ import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.ImageButton;
+import android.widget.SeekBar;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -34,22 +35,25 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
     private static boolean ROTATING;
 
     /* Commands */
-    private static byte MOVE_FORWARD   = 'w';
-    private static byte MOVE_LEFT      = 'a';
-    private static byte MOVE_RIGHT     = 'd';
-    private static byte MOVE_BACKWARDS = 'x';
-    private static byte HALT           = 's';
+    private static final byte UNUSED = 0x00;
 
-    private static byte ROTATE_RIGHT = 'e';
-    private static byte ROTATE_LEFT  = 'q';
-    private static byte ROTATE_STOP  = 'z';
+    private static final byte MOVE_BACKWARDS = 0x00;
+    private static final byte MOVE_RIGHT     = 0x10;
+    private static final byte MOVE_LEFT      = 0x20;
+    private static final byte MOVE_FORWARD   = 0x30;
+    private static final byte HALT           = 0x40;
+
+    private static final byte WRIST = 0x50;
+
+    private static final byte ROTATE_RIGHT = 'e';
+    private static final byte ROTATE_LEFT  = 'q';
+    private static final byte ROTATE_STOP  = 'z';
 
     /* Bluetooth Adapter */
     private static BluetoothAdapter mBluetoothAdapter;
 
     /* Bluetooth device / socket */
     private static BluetoothSocket mSocket;
-    private static BluetoothDevice mDevice;
 
     private static OutputStream os;
 
@@ -86,12 +90,32 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
         mRotateLeftImageButton  = (ImageButton) findViewById(R.id.rotateLeft);
         mRotateRightImageButton = (ImageButton) findViewById(R.id.rotateRight);
 
+        SeekBar wristSeekbar = (SeekBar) findViewById(R.id.wrist);
+
         mUpArrowImageButton.setOnTouchListener(this);
         mRightArrowImageButton.setOnTouchListener(this);
         mLeftArrowImageButton.setOnTouchListener(this);
         mDownArrowImageButton.setOnTouchListener(this);
         mRotateLeftImageButton.setOnTouchListener(this);
         mRotateRightImageButton.setOnTouchListener(this);
+
+        wristSeekbar.setMax(100);
+        wristSeekbar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener()
+        {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser)
+            {
+                Log.d(TAG, "Wrist: " + (byte) progress);
+
+                _sendCommand(WRIST, (byte) progress);
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {}
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {}
+        });
 
         mPowerImageButton.setOnClickListener(new View.OnClickListener()
         {
@@ -187,9 +211,9 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
     {
         if (event.getAction() == MotionEvent.ACTION_DOWN)
         {
-            if (!ROTATING)
+            if (!MOVING)
             {
-                ROTATING = true;
+                MOVING = true;
 
                 arrow.animate().scaleX(1.3f)
                                .scaleY(1.3f)
@@ -199,11 +223,11 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                         ColorStateList.valueOf(
                                 this.getColor(android.R.color.holo_blue_bright)));
 
-                _sendCommand(command);
+                _sendCommand(command, UNUSED);
             }
 
         } else if (event.getAction() == MotionEvent.ACTION_UP) {
-            ROTATING = false;
+            MOVING = false;
 
             arrow.animate().scaleX(1.0f)
                            .scaleY(1.0f)
@@ -214,7 +238,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                             this.getColor(R.color.colorAccent)));
 
             // When released, stop the robot.
-            _sendCommand(HALT);
+            _sendCommand(HALT, UNUSED);
         }
     }
 
@@ -228,9 +252,9 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
     {
         if (event.getAction() == MotionEvent.ACTION_DOWN)
         {
-            if (!MOVING)
+            if (!ROTATING)
             {
-                MOVING = true;
+                ROTATING = true;
 
                 arrow.animate().scaleX(1.2f)
                         .scaleY(1.2f)
@@ -240,11 +264,11 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                         ColorStateList.valueOf(
                                 this.getColor(android.R.color.holo_blue_bright)));
 
-                _sendCommand(command);
+                _sendCommand(command, UNUSED);
             }
 
         } else if (event.getAction() == MotionEvent.ACTION_UP) {
-            MOVING = false;
+            ROTATING = false;
 
             arrow.animate().scaleX(1.0f)
                     .scaleY(1.0f)
@@ -255,25 +279,27 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                             this.getColor(R.color.colorAccent)));
 
             // When released, stop the rotation.
-            _sendCommand(ROTATE_STOP);
+            _sendCommand(ROTATE_STOP, UNUSED);
         }
     }
 
     /**
      * Method to send a command to Arduino.
      * @param command: command to be processed by Arduino.
+     * @param arg: parameter if needed.
      */
-    private void _sendCommand(byte command)
+    private void _sendCommand(byte command, byte arg)
     {
         if (CONNECTED)
         {
             try
             {
                 os.write(command);
+                os.write(arg);
                 os.flush();
 
             } catch (IOException e) {
-                Log.e(TAG, "Error mandando comando: " + e.getMessage());
+                Log.e(TAG, "Error sending command: " + e.getMessage());
             }
         }
     }
@@ -288,12 +314,12 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
         {
             mPulseAnimator.start();
 
-            mDevice = mBluetoothAdapter.getRemoteDevice(MAC_ADDRESS);
+            BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(MAC_ADDRESS);
 
             try
             {
                 // MY_UUID is the app's UUID string
-                mSocket = mDevice.createInsecureRfcommSocketToServiceRecord(MY_UUID);
+                mSocket = device.createInsecureRfcommSocketToServiceRecord(MY_UUID);
 
             } catch (IOException e) {
                 Log.e(TAG, "Error creating RFCOMM socket");
@@ -306,7 +332,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
             try
             {
                 // Connect the device through the socket. This will block
-                // until it succeeds or throws an exception
+                // until it succeeds or throws an exception.
                 Log.d(TAG, "Connecting...");
 
                 mSocket.connect();
@@ -340,8 +366,6 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
 
             if (CONNECTED)
             {
-                Snackbar.make(mCoordinatorLayout, "Connected", Snackbar.LENGTH_SHORT).show();
-
                 mPowerImageButton.setBackgroundTintList(
                         ColorStateList.valueOf(
                                 getColor(R.color.colorLightGreen)));

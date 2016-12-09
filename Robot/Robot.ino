@@ -12,22 +12,43 @@
 #define DIR_R      7      // Right motor polarity
 
 #define BACK          0     // Move back command 
-#define TURN_RIGHT    1     // Turn right command
-#define TURN_LEFT     2     // TUrn left command
+#define RIGHT         1     // Turn right command
+#define LEFT          2     // Turn left command
 #define FORWARD       3     // Move forward command
+
+#define START     0
+#define STOP      1
+
+#define UNUSED   -1
 
 #define NUMBER_OF_SERVOS    5
 #define PIN_OFFSET          8
 
 #define GET_SERVO_PIN(_pos) (_pos + PIN_OFFSET)
 
-// Command received from Android app
-char _command;
+const int MIN_DEGREES_WRIST = 45;
+const int MAX_DEGREES_WRIST = 120;
 
-// Array of servos to control the robotic arm
+// Type of instruction received.
+byte _instruction;
+// Parameter received if needed.
+byte _arg;
+
+// Array of servos to control the arm.
 VarSpeedServo _servos[NUMBER_OF_SERVOS];
 
+/**
+ * Function to rotate the wrist to the position received.
+ * @param pos: value between 0 and 100.
+ */
+void _rotateWrist(short int pos)
+{
+ 
+}
 
+/**
+ * Function to stop the robot.
+ */
 void _halt(void) 
 {                                
   analogWrite(MOTOR_R, 0);
@@ -36,31 +57,37 @@ void _halt(void)
   delay(100);
 }
 
-
-void _move(short int y) 
+/**
+ * Funtion to move the robot.
+ * @param command: command received from app.
+ */
+void _move(short int command) 
 {          
-  if (y == BACK) 
+  if (command == BACK) 
   {                               
     digitalWrite(DIR_R, HIGH);
     digitalWrite(DIR_L, HIGH);
     analogWrite(MOTOR_R, 80);
     analogWrite(MOTOR_L, 80);
      
-  } else if (y == TURN_RIGHT) 
+  } 
+  else if (command == RIGHT) 
   {                               
     digitalWrite(DIR_R, HIGH);
     digitalWrite(DIR_L, LOW);
     analogWrite(MOTOR_R, 100);
     analogWrite(MOTOR_L, 100);
      
-  } else if (y == TURN_LEFT) 
+  } 
+  else if (command == LEFT) 
   {                              
     digitalWrite(DIR_R, LOW);
     digitalWrite(DIR_L, HIGH);
     analogWrite(MOTOR_R, 100);
     analogWrite(MOTOR_L, 100);
      
-  } else if (y == FORWARD) 
+  } 
+  else if (command == FORWARD) 
   {                              
     digitalWrite(DIR_R, LOW );
     digitalWrite(DIR_L, LOW );
@@ -69,7 +96,9 @@ void _move(short int y)
   }
 }
 
-
+/**
+ * Bluetooth SETUP
+ */
 void setupBlueToothConnection()
 {
   // Set BluetoothBee BaudRate to default baud rate 38400
@@ -96,13 +125,18 @@ void setupBlueToothConnection()
   Serial.flush();  
 }
 
-
+/**
+ * Setup
+ */
 void setup() 
 {
+  // Attach every servo.
   for (int i = 0; i < NUMBER_OF_SERVOS; i++)
   {
     _servos[i].attach(GET_SERVO_PIN(i));
   }
+
+  // TODO Set the initial position of the servos.
 
   pinMode(DIR_R, OUTPUT);
   pinMode(DIR_L, OUTPUT);
@@ -116,35 +150,42 @@ void setup()
   Serial.flush();  
 }
 
-
+/**
+ * Main LOOP
+ */
 void loop() 
 {    
   if (Serial.available())
   {
-    _command = (char)Serial.read();
+    _instruction = Serial.read();
+    _arg = Serial.read();
     Serial.flush();
         
-    switch (_command) 
+    switch (_instruction) 
     {
-      case 'x':              // Move back
+      case 0x00:              // Move back
         _move(BACK);         
         break;    
             
-      case 'd':              // Turn right
-        _move(TURN_RIGHT);         
+      case 0x10:              // Turn right
+        _move(RIGHT);         
         break;   
              
-      case 'a':              // Turn left
-        _move(TURN_LEFT);          
+      case 0x20:              // Turn left
+        _move(LEFT);          
         break;  
               
-      case 'w':              // Move forward
+      case 0x30:              // Move forward
         _move(FORWARD);       
         break; 
               
-      case 's':              // Stop
+      case 0x40:              // Stop
         _halt();         
         break;  
+
+      case 0x50:              // Rotate wrist
+        _rotateWrist((short int) _arg);         
+        break;
     }
   }
 }
