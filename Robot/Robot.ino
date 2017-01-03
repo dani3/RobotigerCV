@@ -1,7 +1,6 @@
 #include <VarSpeedServo.h>
 
 /* ---------------------------- */
-/* ROBOTIGER                    */
 /* AUTHOR: DANIEL MANCEBO       */
 /* DATE: 01/10/2013             */
 /* ---------------------------- */
@@ -15,9 +14,6 @@
 #define RIGHT         1     // Turn right command
 #define LEFT          2     // Turn left command
 #define FORWARD       3     // Move forward command
-
-#define START     0
-#define STOP      1
 
 #define UNUSED   -1
 
@@ -121,22 +117,22 @@ void _move(short command)
  */
 void setupBlueToothConnection()
 {
-  // Set BluetoothBee BaudRate to default baud rate 38400
+  // Set BluetoothBee BaudRate to default baud rate 38400.
   Serial.begin(38400);     
                      
-  // Set the bluetooth work in slave mode
+  // Set the bluetooth work in slave mode.
   Serial.print("\r\n+STWMOD=0\r\n");     
-  // Set the bluetooth name as "SeeedBTSlave"     
+  // Set the bluetooth name as "SeeedBTSlave". 
   Serial.print("\r\n+STNA=SeeedBTSlave\r\n"); 
-  // Permit Paired device to connect me
+  // Permit Paired device to connect me.
   Serial.print("\r\n+STOAUT=1\r\n");    
-  // Auto-connection should be forbidden here      
+  // Auto-connection should be forbidden here.    
   Serial.print("\r\n+STAUTO=0\r\n");          
 
   // This delay is required.
   delay(2000); 
   
-  // Make the slave bluetooth inquirable 
+  // Make the slave bluetooth inquirable.
   Serial.print("\r\n+INQ=1\r\n"); 
 
   // This delay is required.
@@ -156,10 +152,8 @@ void setup()
     _servos[i].attach(GET_SERVO_PIN(i));
   }
 
-  // Init servos position
+  // Init servos position.
   _servos[SERVO_WRIST_POSITION].slowmove(MIN_DEGREES_WRIST, SERVO_SPEED);
-
-  pinMode(LED_BUILTIN, OUTPUT);
 
   pinMode(DIR_R, OUTPUT);
   pinMode(DIR_L, OUTPUT);
@@ -180,14 +174,14 @@ void loop()
 {    
   // Wait until instruction byte has been received.
   while (!Serial.available());
-
-  // Instruction should be read. MSB is set to 1
+  // Instruction should be read. MSB is set to 1.
   _instruction = (short) Serial.read();
+  
   if (_instruction & 0x80)
   {
     // Wait until arg byte has been received.
     while (!Serial.available());
-
+    // Read the argument.
     _arg = (short) Serial.read();
 
     switch (_instruction) 
@@ -213,7 +207,7 @@ void loop()
         break;  
   
       case 0xA0:              // Rotate wrist
-        _rotateWrist((short) _arg);         
+        _rotateWrist(_arg);         
         break;
     }
   }
