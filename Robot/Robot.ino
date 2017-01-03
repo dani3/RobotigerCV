@@ -1,7 +1,7 @@
 #include <VarSpeedServo.h>
 
 /* ---------------------------- */
-/* ROVER 5 CODE                 */
+/* ROBOTIGER                    */
 /* AUTHOR: DANIEL MANCEBO       */
 /* DATE: 01/10/2013             */
 /* ---------------------------- */
@@ -24,26 +24,46 @@
 #define NUMBER_OF_SERVOS    5
 #define PIN_OFFSET          8
 
+#define SERVO_WRIST_POSITION   0
+
+#define SERVO_SPEED     32
+
 #define GET_SERVO_PIN(_pos) (_pos + PIN_OFFSET)
 
-const int MIN_DEGREES_WRIST = 45;
-const int MAX_DEGREES_WRIST = 120;
+const short OLD_MIN_RANGE = 0;
+const short OLD_MAX_RANGE = 100;
+
+const int MIN_DEGREES_WRIST = 50;
+const int MAX_DEGREES_WRIST = 111;
 
 // Type of instruction received.
-byte _instruction;
+short _instruction;
 // Parameter received if needed.
-byte _arg;
+short _arg;
 
 // Array of servos to control the arm.
 VarSpeedServo _servos[NUMBER_OF_SERVOS];
 
 /**
+ * Function to normalize the value received to the working range of the servo.
+ * @param oldValue: value received between 0-100 to be normalized.
+ * @param minNewRange: lowest value of the new range.
+ * @param maxNewRange: highest value of the new range.
+ */
+int _normalize(short oldValue, int minNewRange, int maxNewRange)
+{
+  return (float)(maxNewRange - minNewRange) / (float)(OLD_MAX_RANGE - OLD_MIN_RANGE) * (float)(oldValue - OLD_MAX_RANGE) + (float)maxNewRange;
+}
+
+/**
  * Function to rotate the wrist to the position received.
  * @param pos: value between 0 and 100.
  */
-void _rotateWrist(short int pos)
+void _rotateWrist(short pos)
 {
- 
+  int newPosition = _normalize(pos, MIN_DEGREES_WRIST, MAX_DEGREES_WRIST);
+  
+  _servos[SERVO_WRIST_POSITION].slowmove(newPosition, SERVO_SPEED);
 }
 
 /**
@@ -61,7 +81,7 @@ void _halt(void)
  * Funtion to move the robot.
  * @param command: command received from app.
  */
-void _move(short int command) 
+void _move(short command) 
 {          
   if (command == BACK) 
   {                               
@@ -91,8 +111,8 @@ void _move(short int command)
   {                              
     digitalWrite(DIR_R, LOW );
     digitalWrite(DIR_L, LOW );
-    analogWrite(MOTOR_R, 150 );
-    analogWrite(MOTOR_L, 150 ); 
+    analogWrite(MOTOR_R, 150);
+    analogWrite(MOTOR_L, 150); 
   }
 }
 
@@ -136,7 +156,10 @@ void setup()
     _servos[i].attach(GET_SERVO_PIN(i));
   }
 
-  // TODO Set the initial position of the servos.
+  // Init servos position
+  _servos[SERVO_WRIST_POSITION].slowmove(MIN_DEGREES_WRIST, SERVO_SPEED);
+
+  pinMode(LED_BUILTIN, OUTPUT);
 
   pinMode(DIR_R, OUTPUT);
   pinMode(DIR_L, OUTPUT);
@@ -155,37 +178,45 @@ void setup()
  */
 void loop() 
 {    
-  if (Serial.available())
+  // Wait until instruction byte has been received.
+  while (!Serial.available());
+
+  // Instruction should be read. MSB is set to 1
+  _instruction = (short) Serial.read();
+  if (_instruction & 0x80)
   {
-    _instruction = Serial.read();
-    _arg = Serial.read();
-    Serial.flush();
-        
+    // Wait until arg byte has been received.
+    while (!Serial.available());
+
+    _arg = (short) Serial.read();
+
     switch (_instruction) 
     {
-      case 0x00:              // Move back
+      case 0x80:              // Move back
         _move(BACK);         
         break;    
             
-      case 0x10:              // Turn right
+      case 0x81:              // Turn right
         _move(RIGHT);         
         break;   
              
-      case 0x20:              // Turn left
+      case 0x82:              // Turn left
         _move(LEFT);          
         break;  
               
-      case 0x30:              // Move forward
+      case 0x83:              // Move forward
         _move(FORWARD);       
         break; 
               
-      case 0x40:              // Stop
+      case 0x84:              // Stop
         _halt();         
         break;  
-
-      case 0x50:              // Rotate wrist
-        _rotateWrist((short int) _arg);         
+  
+      case 0xA0:              // Rotate wrist
+        _rotateWrist((short) _arg);         
         break;
     }
   }
+  
+  Serial.flush();
 }

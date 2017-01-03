@@ -30,24 +30,27 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
     private static final UUID MY_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
     private static final String MAC_ADDRESS = "00:13:EF:00:0E:5F";
     private static final int REQUEST_ENABLE_BT = 1;
+
+    /* Flags */
     private static boolean CONNECTED;
+    private static boolean SENDING;
     private static boolean MOVING;
     private static boolean ROTATING;
 
     /* Commands */
-    private static final byte UNUSED = 0x00;
+    private static final short UNUSED = 0x00;
 
-    private static final byte MOVE_BACKWARDS = 0x00;
-    private static final byte MOVE_RIGHT     = 0x10;
-    private static final byte MOVE_LEFT      = 0x20;
-    private static final byte MOVE_FORWARD   = 0x30;
-    private static final byte HALT           = 0x40;
+    private static final short MOVE_BACKWARDS = 0x80;
+    private static final short MOVE_RIGHT     = 0x81;
+    private static final short MOVE_LEFT      = 0x82;
+    private static final short MOVE_FORWARD   = 0x83;
+    private static final short HALT           = 0x84;
 
-    private static final byte WRIST = 0x50;
+    private static final short WRIST = 0xA0;
 
-    private static final byte ROTATE_RIGHT = 'e';
-    private static final byte ROTATE_LEFT  = 'q';
-    private static final byte ROTATE_STOP  = 'z';
+    private static final short ROTATE_RIGHT = 0xB0;
+    private static final short ROTATE_LEFT  = 0xB1;
+    private static final short ROTATE_STOP  = 0xB2;
 
     /* Bluetooth Adapter */
     private static BluetoothAdapter mBluetoothAdapter;
@@ -78,6 +81,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
         setContentView(R.layout.activity_main);
 
         CONNECTED = false;
+        SENDING   = false;
         MOVING    = false;
         ROTATING  = false;
 
@@ -105,9 +109,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser)
             {
-                Log.d(TAG, "Wrist: " + (byte) progress);
-
-                _sendCommand(WRIST, (byte) progress);
+                _sendCommand(WRIST, (short) progress);
             }
 
             @Override
@@ -207,7 +209,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
      * @param event: event triggered.
      * @param command: command to be sent to Arduino.
      */
-    private void _move(ImageButton arrow, MotionEvent event, byte command)
+    private void _move(ImageButton arrow, MotionEvent event, short command)
     {
         if (event.getAction() == MotionEvent.ACTION_DOWN)
         {
@@ -248,7 +250,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
      * @param event: event triggered.
      * @param command: command to be sent to Arduino.
      */
-    private void _rotate(ImageButton arrow, MotionEvent event, byte command)
+    private void _rotate(ImageButton arrow, MotionEvent event, short command)
     {
         if (event.getAction() == MotionEvent.ACTION_DOWN)
         {
@@ -257,9 +259,10 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                 ROTATING = true;
 
                 arrow.animate().scaleX(1.2f)
-                        .scaleY(1.2f)
-                        .setDuration(200)
-                        .start();
+                               .scaleY(1.2f)
+                               .setDuration(200)
+                               .start();
+
                 arrow.setBackgroundTintList(
                         ColorStateList.valueOf(
                                 this.getColor(android.R.color.holo_blue_bright)));
@@ -271,9 +274,10 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
             ROTATING = false;
 
             arrow.animate().scaleX(1.0f)
-                    .scaleY(1.0f)
-                    .setDuration(200)
-                    .start();
+                           .scaleY(1.0f)
+                           .setDuration(200)
+                           .start();
+
             arrow.setBackgroundTintList(
                     ColorStateList.valueOf(
                             this.getColor(R.color.colorAccent)));
@@ -288,10 +292,12 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
      * @param command: command to be processed by Arduino.
      * @param arg: parameter if needed.
      */
-    private void _sendCommand(byte command, byte arg)
+    private void _sendCommand(short command, short arg)
     {
-        if (CONNECTED)
+        if ((CONNECTED) && (!SENDING))
         {
+            SENDING = true;
+
             try
             {
                 os.write(command);
@@ -300,6 +306,9 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
 
             } catch (IOException e) {
                 Log.e(TAG, "Error sending command: " + e.getMessage());
+
+            } finally {
+                SENDING = false;
             }
         }
     }
