@@ -40,17 +40,17 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
     /* Commands */
     private static final short UNUSED = 0x00;
 
+    private static final short RESTART = 0xFF;
+
     private static final short MOVE_BACKWARDS = 0x80;
     private static final short MOVE_RIGHT     = 0x81;
     private static final short MOVE_LEFT      = 0x82;
     private static final short MOVE_FORWARD   = 0x83;
     private static final short HALT           = 0x84;
 
-    private static final short WRIST = 0xA0;
-
-    private static final short ROTATE_RIGHT = 0xB0;
-    private static final short ROTATE_LEFT  = 0xB1;
-    private static final short ROTATE_STOP  = 0xB2;
+    private static final short ROTATE_WRIST = 0xA0;
+    private static final short ELBOW        = 0xB0;
+    private static final short SHOULDER     = 0xC0;
 
     /* Bluetooth Adapter */
     private static BluetoothAdapter mBluetoothAdapter;
@@ -85,8 +85,19 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
         MOVING    = false;
         ROTATING  = false;
 
-        mCoordinatorLayout      = (CoordinatorLayout) findViewById(R.id.coordinator_layout);
-        mPowerImageButton       = (FloatingActionButton) findViewById(R.id.powerImageButton);
+        mCoordinatorLayout = (CoordinatorLayout) findViewById(R.id.coordinator_layout);
+        mPowerImageButton  = (FloatingActionButton) findViewById(R.id.powerImageButton);
+
+        _initArrows();
+        _initSeekbars();
+        _initBluetooth();
+    }
+
+    /**
+     * Metodo para inicializar las flechas.
+     */
+    private void _initArrows()
+    {
         mUpArrowImageButton     = (ImageButton) findViewById(R.id.upArrowImageButton);
         mDownArrowImageButton   = (ImageButton) findViewById(R.id.downArrowImageButton);
         mLeftArrowImageButton   = (ImageButton) findViewById(R.id.leftArrowImageButton);
@@ -94,14 +105,22 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
         mRotateLeftImageButton  = (ImageButton) findViewById(R.id.rotateLeft);
         mRotateRightImageButton = (ImageButton) findViewById(R.id.rotateRight);
 
-        SeekBar wristSeekbar = (SeekBar) findViewById(R.id.wrist);
-
         mUpArrowImageButton.setOnTouchListener(this);
         mRightArrowImageButton.setOnTouchListener(this);
         mLeftArrowImageButton.setOnTouchListener(this);
         mDownArrowImageButton.setOnTouchListener(this);
         mRotateLeftImageButton.setOnTouchListener(this);
         mRotateRightImageButton.setOnTouchListener(this);
+    }
+
+    /**
+     * Metodo para inicializar las Seekbars.
+     */
+    private void _initSeekbars()
+    {
+        SeekBar wristSeekbar    = (SeekBar) findViewById(R.id.wrist);
+        SeekBar elbowSeekbar    = (SeekBar) findViewById(R.id.elbow);
+        SeekBar shoulderSeekbar = (SeekBar) findViewById(R.id.shoulder);
 
         wristSeekbar.setMax(100);
         wristSeekbar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener()
@@ -109,7 +128,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser)
             {
-                _sendCommand(WRIST, (short) progress);
+                _sendCommand(ROTATE_WRIST, (short) progress);
             }
 
             @Override
@@ -119,6 +138,44 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
             public void onStopTrackingTouch(SeekBar seekBar) {}
         });
 
+        elbowSeekbar.setMax(100);
+        elbowSeekbar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener()
+        {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser)
+            {
+                _sendCommand(ELBOW, (short) (100 - progress));
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {}
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {}
+        });
+
+        shoulderSeekbar.setMax(100);
+        shoulderSeekbar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener()
+        {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser)
+            {
+                _sendCommand(SHOULDER, (short) (100 - progress));
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {}
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {}
+        });
+    }
+
+    /**
+     * Metodo que realiza el setup del Bluetooth.
+     */
+    private void _initBluetooth()
+    {
         mPowerImageButton.setOnClickListener(new View.OnClickListener()
         {
             @Override
@@ -132,8 +189,8 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
         });
 
         mPulseAnimator = ObjectAnimator.ofPropertyValuesHolder(mPowerImageButton
-                                                        , PropertyValuesHolder.ofFloat("scaleX", 1.2f)
-                                                        , PropertyValuesHolder.ofFloat("scaleY", 1.2f));
+                , PropertyValuesHolder.ofFloat("scaleX", 1.2f)
+                , PropertyValuesHolder.ofFloat("scaleY", 1.2f));
         mPulseAnimator.setDuration(310);
         mPulseAnimator.setRepeatCount(ObjectAnimator.INFINITE);
         mPulseAnimator.setRepeatMode(ObjectAnimator.REVERSE);
@@ -192,11 +249,11 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                 break;
 
             case (R.id.rotateLeft):
-                _rotate(mRotateLeftImageButton, event, ROTATE_LEFT);
+                _rotate(mRotateLeftImageButton, event, (short)0);
                 break;
 
             case (R.id.rotateRight):
-                _rotate(mRotateRightImageButton, event, ROTATE_RIGHT);
+                _rotate(mRotateRightImageButton, event, (short)0);
                 break;
         }
 
@@ -283,7 +340,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                             this.getColor(R.color.colorAccent)));
 
             // When released, stop the rotation.
-            _sendCommand(ROTATE_STOP, UNUSED);
+            _sendCommand((short)0, UNUSED);
         }
     }
 
@@ -311,6 +368,14 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                 SENDING = false;
             }
         }
+    }
+
+    @Override
+    public void onBackPressed()
+    {
+        super.onBackPressed();
+
+        _sendCommand(RESTART, UNUSED);
     }
 
     /**

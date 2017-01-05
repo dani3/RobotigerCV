@@ -10,19 +10,21 @@
 #define MOTOR_R    6      // Right motor PIN
 #define DIR_R      7      // Right motor polarity
 
-#define BACK          0     // Move back command 
-#define RIGHT         1     // Turn right command
-#define LEFT          2     // Turn left command
-#define FORWARD       3     // Move forward command
+#define BACK        0     // Move back command 
+#define RIGHT       1     // Turn right command
+#define LEFT        2     // Turn left command
+#define FORWARD     3     // Move forward command
 
 #define UNUSED   -1
 
 #define NUMBER_OF_SERVOS    5
 #define PIN_OFFSET          8
 
-#define SERVO_WRIST_POSITION   0
+#define SERVO_WRIST_POSITION      0
+#define SERVO_ELBOW_POSITION      1
+#define SERVO_SHOULDER_POSITION   2
 
-#define SERVO_SPEED     32
+#define SERVO_SPEED         32
 
 #define GET_SERVO_PIN(_pos) (_pos + PIN_OFFSET)
 
@@ -31,6 +33,12 @@ const short OLD_MAX_RANGE = 100;
 
 const int MIN_DEGREES_WRIST = 50;
 const int MAX_DEGREES_WRIST = 111;
+
+const int MIN_DEGREES_ELBOW = 50;
+const int MAX_DEGREES_ELBOW = 111;
+
+const int MIN_DEGREES_SHOULDER = 60;
+const int MAX_DEGREES_SHOULDER = 111;
 
 // Type of instruction received.
 short _instruction;
@@ -60,6 +68,39 @@ void _rotateWrist(short pos)
   int newPosition = _normalize(pos, MIN_DEGREES_WRIST, MAX_DEGREES_WRIST);
   
   _servos[SERVO_WRIST_POSITION].slowmove(newPosition, SERVO_SPEED);
+}
+
+/**
+ * Function to move the elbow to the position received.
+ * @param pos: value between 0 and 100.
+ */
+void _moveElbow(short pos)
+{
+  int newPosition = _normalize(pos, MIN_DEGREES_ELBOW, MAX_DEGREES_ELBOW);
+  
+  _servos[SERVO_ELBOW_POSITION].slowmove(newPosition, SERVO_SPEED);
+}
+
+/**
+ * Function to move the shoulder to the position received.
+ * @param pos: value between 0 and 100.
+ */
+void _moveShoulder(short pos)
+{
+  int newPosition = _normalize(pos, MIN_DEGREES_SHOULDER, MAX_DEGREES_SHOULDER);
+  
+  _servos[SERVO_SHOULDER_POSITION].slowmove(newPosition, SERVO_SPEED);
+}
+
+/**
+ * Function to restart every servo's position.
+ */
+void _restart(void)
+{
+  // Init servos position.
+  _servos[SERVO_WRIST_POSITION].slowmove(MIN_DEGREES_WRIST, SERVO_SPEED);
+  _servos[SERVO_ELBOW_POSITION].slowmove(MAX_DEGREES_ELBOW, SERVO_SPEED);
+  _servos[SERVO_SHOULDER_POSITION].slowmove(MAX_DEGREES_SHOULDER, SERVO_SPEED);
 }
 
 /**
@@ -154,6 +195,8 @@ void setup()
 
   // Init servos position.
   _servos[SERVO_WRIST_POSITION].slowmove(MIN_DEGREES_WRIST, SERVO_SPEED);
+  _servos[SERVO_ELBOW_POSITION].slowmove(MAX_DEGREES_ELBOW, SERVO_SPEED);
+  _servos[SERVO_SHOULDER_POSITION].slowmove(MAX_DEGREES_SHOULDER, SERVO_SPEED);
 
   pinMode(DIR_R, OUTPUT);
   pinMode(DIR_L, OUTPUT);
@@ -208,6 +251,18 @@ void loop()
   
       case 0xA0:              // Rotate wrist
         _rotateWrist(_arg);         
+        break;
+
+      case 0xB0:              // Move elbow
+        _moveElbow(_arg);         
+        break;
+
+      case 0xC0:              // Move shoulder
+        _moveShoulder(_arg);         
+        break;
+
+      case 0xFF:
+        _restart();
         break;
     }
   }

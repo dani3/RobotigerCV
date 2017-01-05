@@ -84,6 +84,7 @@
                     android:layout_marginRight="16dp"/>
 
                 <android.support.v7.widget.AppCompatSeekBar
+                    android:id="@+id/shoulder"
                     android:layout_width="match_parent"
                     android:layout_height="28dp"
                     android:layout_marginLeft="16dp"
@@ -91,6 +92,7 @@
                     android:layout_marginTop="8dp"/>
 
                 <android.support.v7.widget.AppCompatSeekBar
+                    android:id="@+id/elbow"
                     android:layout_width="match_parent"
                     android:layout_height="28dp"
                     android:layout_marginLeft="16dp"
