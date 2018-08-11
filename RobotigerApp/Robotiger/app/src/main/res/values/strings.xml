@@ -1,4 +1,10 @@
 <resources>
     <string name="app_name">Robotiger</string>
     <string name="action_settings">Settings</string>
+
+    <string name="app_version">Robotiger - 0.92v</string>
+    <string name="degrees">Degrees</string>
+    <string name="status_disconnected">Status: Disconnected</string>
+    <string name="status_connecting">Status: Connecting</string>
+    <string name="status_connected">Status: Connected</string>
 </resources>

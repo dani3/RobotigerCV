@@ -20,9 +20,12 @@
 #define NUMBER_OF_SERVOS    5
 #define PIN_OFFSET          8
 
-#define SERVO_WRIST_POSITION      0
-#define SERVO_ELBOW_POSITION      1
-#define SERVO_SHOULDER_POSITION   2
+#define SERVO_ROTATION_POSITION       0
+#define SERVO_ROTATE_WRIST_POSITION   1
+#define SERVO_HAND_POSITION           2
+#define SERVO_SHOULDER_POSITION       3
+#define SERVO_WRIST_POSITION          4
+#define SERVO_ELBOW_POSITION          5
 
 #define SERVO_SPEED         32
 
@@ -34,11 +37,20 @@ const short OLD_MAX_RANGE = 100;
 const int MIN_DEGREES_WRIST = 50;
 const int MAX_DEGREES_WRIST = 111;
 
-const int MIN_DEGREES_ELBOW = 50;
-const int MAX_DEGREES_ELBOW = 111;
+const int MIN_DEGREES_ELBOW = 45;
+const int MAX_DEGREES_ELBOW = 85;
 
-const int MIN_DEGREES_SHOULDER = 60;
-const int MAX_DEGREES_SHOULDER = 111;
+const int MIN_DEGREES_SHOULDER = 45;
+const int MAX_DEGREES_SHOULDER = 85;
+
+const int MIN_DEGREES_ROTATE_WRIST = 45;
+const int MAX_DEGREES_ROTATE_WRIST = 90;
+
+const int MIN_DEGREES_HAND = 45;
+const int MAX_DEGREES_HAND = 105; 
+
+const int MIN_DEGREES_ROTATION = 50;
+const int MAX_DEGREES_ROTATION = 150;   
 
 // Type of instruction received.
 short _instruction;
@@ -65,9 +77,31 @@ int _normalize(short oldValue, int minNewRange, int maxNewRange)
  */
 void _rotateWrist(short pos)
 {
+  int newPosition = _normalize(pos, MIN_DEGREES_ROTATE_WRIST, MAX_DEGREES_ROTATE_WRIST);
+  
+  _servos[SERVO_ROTATE_WRIST_POSITION].slowmove(newPosition, SERVO_SPEED);
+}
+
+/**
+ * Function to move the wrist to the position received.
+ * @param pos: value between 0 and 100.
+ */
+void _moveWrist(short pos)
+{
   int newPosition = _normalize(pos, MIN_DEGREES_WRIST, MAX_DEGREES_WRIST);
   
   _servos[SERVO_WRIST_POSITION].slowmove(newPosition, SERVO_SPEED);
+}
+
+/**
+ * Function to move the hand to the position received.
+ * @param pos: value between 0 and 100.
+ */
+void _moveHand(short pos)
+{
+  int newPosition = _normalize(pos, MIN_DEGREES_HAND, MAX_DEGREES_HAND);
+  
+  _servos[SERVO_HAND_POSITION].slowmove(newPosition, SERVO_SPEED);
 }
 
 /**
@@ -101,6 +135,9 @@ void _restart(void)
   _servos[SERVO_WRIST_POSITION].slowmove(MIN_DEGREES_WRIST, SERVO_SPEED);
   _servos[SERVO_ELBOW_POSITION].slowmove(MAX_DEGREES_ELBOW, SERVO_SPEED);
   _servos[SERVO_SHOULDER_POSITION].slowmove(MAX_DEGREES_SHOULDER, SERVO_SPEED);
+  _servos[SERVO_ROTATE_WRIST_POSITION].slowmove(MAX_DEGREES_ROTATE_WRIST, SERVO_SPEED);
+  _servos[SERVO_HAND_POSITION].slowmove(MIN_DEGREES_HAND, SERVO_SPEED);
+  _servos[SERVO_ROTATION_POSITION].slowmove(MAX_DEGREES_ROTATION, SERVO_SPEED);
 }
 
 /**
@@ -146,8 +183,8 @@ void _move(short command)
   } 
   else if (command == FORWARD) 
   {                              
-    digitalWrite(DIR_R, LOW );
-    digitalWrite(DIR_L, LOW );
+    digitalWrite(DIR_R, LOW);
+    digitalWrite(DIR_L, LOW);
     analogWrite(MOTOR_R, 150);
     analogWrite(MOTOR_L, 150); 
   }
@@ -197,6 +234,9 @@ void setup()
   _servos[SERVO_WRIST_POSITION].slowmove(MIN_DEGREES_WRIST, SERVO_SPEED);
   _servos[SERVO_ELBOW_POSITION].slowmove(MAX_DEGREES_ELBOW, SERVO_SPEED);
   _servos[SERVO_SHOULDER_POSITION].slowmove(MAX_DEGREES_SHOULDER, SERVO_SPEED);
+  _servos[SERVO_ROTATE_WRIST_POSITION].slowmove(MAX_DEGREES_ROTATE_WRIST, SERVO_SPEED);
+  _servos[SERVO_HAND_POSITION].slowmove(MIN_DEGREES_HAND, SERVO_SPEED);
+  _servos[SERVO_ROTATION_POSITION].slowmove(MAX_DEGREES_ROTATION, SERVO_SPEED);
 
   pinMode(DIR_R, OUTPUT);
   pinMode(DIR_L, OUTPUT);
@@ -229,7 +269,7 @@ void loop()
 
     switch (_instruction) 
     {
-      case 0x80:              // Move back
+      case 0x80:              // Move backwards
         _move(BACK);         
         break;    
             
@@ -259,6 +299,14 @@ void loop()
 
       case 0xC0:              // Move shoulder
         _moveShoulder(_arg);         
+        break;
+
+      case 0xD0:              // Move wrist
+        _moveWrist(_arg);         
+        break;
+
+      case 0xE0:              // Move wrist
+        _moveHand(_arg);         
         break;
 
       case 0xFF:

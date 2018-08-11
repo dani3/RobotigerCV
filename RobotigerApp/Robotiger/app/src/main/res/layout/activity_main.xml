@@ -4,154 +4,376 @@
     android:id="@+id/coordinator_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/background">
+    android:background="@drawable/material_background">
 
     <RelativeLayout
-        android:layout_width="225dp"
-        android:layout_height="225dp"
-        android:layout_gravity="top|start"
-        android:background="@drawable/diamond"
-        android:layout_marginTop="52dp"
-        android:layout_marginBottom="52dp"
-        android:layout_marginLeft="32dp"
-        android:layout_marginRight="52dp"
-        android:backgroundTint="@color/colorAccent">
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
 
-        <ImageButton
-            android:id="@+id/upArrowImageButton"
-            android:layout_width="54dp"
-            android:layout_height="54dp"
-            android:background="@drawable/up_arrow"
-            android:backgroundTint="@color/colorAccent"
-            android:layout_centerHorizontal="true"
-            android:layout_marginTop="16dp"/>
-
-        <ImageButton
-            android:id="@+id/downArrowImageButton"
-            android:layout_width="54dp"
-            android:layout_height="54dp"
-            android:background="@drawable/down_arrow"
-            android:backgroundTint="@color/colorAccent"
-            android:layout_centerHorizontal="true"
-            android:layout_alignParentBottom="true"
-            android:layout_marginBottom="16dp"/>
-
-        <ImageButton
-            android:id="@+id/leftArrowImageButton"
-            android:layout_width="54dp"
-            android:layout_height="54dp"
-            android:background="@drawable/left_arrow"
-            android:backgroundTint="@color/colorAccent"
-            android:layout_centerVertical="true"
-            android:layout_marginLeft="16dp"/>
-
-        <ImageButton
-            android:id="@+id/rightArrowImageButton"
-            android:layout_width="54dp"
-            android:layout_height="54dp"
-            android:background="@drawable/right_arrow"
-            android:backgroundTint="@color/colorAccent"
-            android:layout_centerVertical="true"
-            android:layout_alignParentEnd="true"
-            android:layout_marginRight="16dp"/>
-
-    </RelativeLayout>
-
-    <RelativeLayout
-        android:layout_width="258dp"
-        android:layout_height="278dp"
-        android:layout_gravity="right"
-        android:layout_marginRight="52dp">
-
+        <!-- Seekbars cotrols -->
         <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="vertical"
-            android:weightSum="1">
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_marginStart="168dp"
+            android:orientation="vertical">
+
+            <include android:id="@+id/arm_header"
+                layout="@layout/robot_movement_header"/>
 
             <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="0.75"
-                android:layout_marginBottom="16dp"
-                android:gravity="center_vertical"
+                android:layout_width="396dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="64dp"
                 android:orientation="vertical">
 
-                <android.support.v7.widget.AppCompatSeekBar
+                <!-- SHOULDER Seekbar -->
+                <LinearLayout
+                    android:id="@+id/shoulder_layout"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <TextView
+                        android:layout_width="128dp"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical"
+                        android:textColor="@color/white_light"
+                        android:textSize="18sp"
+                        android:text="Shoulder"/>
+
+                    <SeekBar
+                        android:id="@+id/shoulder"
+                        android:layout_width="268dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="24dp"
+                        android:layout_gravity="center_vertical"
+                        android:max="100"
+                        android:progressDrawable="@drawable/seekbar"
+                        android:thumbTint="@android:color/transparent"/>
+
+                </LinearLayout>
+
+                <View
+                    android:id="@+id/shoulder_bottom"
                     android:layout_width="match_parent"
-                    android:layout_height="28dp"
-                    android:layout_marginLeft="16dp"
-                    android:layout_marginRight="16dp"/>
+                    android:layout_height="1dp"
+                    android:layout_marginTop="24dp"
+                    android:alpha="0.2"
+                    android:background="@android:color/white"/>
 
-                <android.support.v7.widget.AppCompatSeekBar
-                    android:id="@+id/shoulder"
+                <!-- ELBOW Seekbar -->
+                <LinearLayout
+                    android:id="@+id/elbow_layout"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="24dp"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <TextView
+                        android:layout_width="128dp"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical"
+                        android:textColor="@color/white_light"
+                        android:textSize="18sp"
+                        android:text="Elbow"/>
+
+                    <SeekBar
+                        android:id="@+id/elbow"
+                        android:layout_width="268dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="24dp"
+                        android:layout_gravity="center_vertical"
+                        android:max="100"
+                        android:progressDrawable="@drawable/seekbar"
+                        android:thumbTint="@android:color/transparent"/>
+
+                </LinearLayout>
+
+                <View
+                    android:id="@+id/elbow_bottom"
                     android:layout_width="match_parent"
-                    android:layout_height="28dp"
-                    android:layout_marginLeft="16dp"
-                    android:layout_marginRight="16dp"
-                    android:layout_marginTop="8dp"/>
+                    android:layout_height="1dp"
+                    android:layout_marginTop="24dp"
+                    android:alpha="0.2"
+                    android:background="@android:color/white"/>
 
-                <android.support.v7.widget.AppCompatSeekBar
-                    android:id="@+id/elbow"
+                <!-- WRIST Seekbar -->
+                <LinearLayout
+                    android:id="@+id/wrist_layout"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="24dp"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <TextView
+                        android:layout_width="128dp"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical"
+                        android:textColor="@color/white_light"
+                        android:textSize="18sp"
+                        android:text="Wrist"/>
+
+                    <SeekBar
+                        android:id="@+id/wrist"
+                        android:layout_width="268dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="24dp"
+                        android:layout_gravity="center_vertical"
+                        android:max="100"
+                        android:progressDrawable="@drawable/seekbar"
+                        android:thumbTint="@android:color/transparent"/>
+
+                </LinearLayout>
+
+                <View
+                    android:id="@+id/wrist_bottom"
                     android:layout_width="match_parent"
-                    android:layout_height="28dp"
-                    android:layout_marginLeft="16dp"
-                    android:layout_marginRight="16dp"
-                    android:layout_marginTop="8dp"/>
+                    android:layout_height="1dp"
+                    android:layout_marginTop="24dp"
+                    android:alpha="0.2"
+                    android:background="@android:color/white"/>
 
-                <android.support.v7.widget.AppCompatSeekBar
-                    android:id="@+id/wrist"
+                <!-- WRIST ROTATION Seekbar -->
+                <LinearLayout
+                    android:id="@+id/wrist_rotation_layout"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="24dp"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <TextView
+                        android:layout_width="128dp"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical"
+                        android:textColor="@color/white_light"
+                        android:textSize="18sp"
+                        android:text="Wrist Rotation"/>
+
+                    <SeekBar
+                        android:id="@+id/wrist_rotation"
+                        android:layout_width="268dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="24dp"
+                        android:layout_gravity="center_vertical"
+                        android:max="100"
+                        android:progressDrawable="@drawable/seekbar"
+                        android:thumbTint="@android:color/transparent"/>
+
+                </LinearLayout>
+
+                <View
+                    android:id="@+id/wrist_rotation_bottom"
                     android:layout_width="match_parent"
-                    android:layout_height="28dp"
-                    android:layout_marginLeft="16dp"
-                    android:layout_marginRight="16dp"
-                    android:layout_marginTop="8dp"/>
+                    android:layout_height="1dp"
+                    android:layout_marginTop="24dp"
+                    android:alpha="0.2"
+                    android:background="@android:color/white"/>
 
-                <android.support.v7.widget.AppCompatSeekBar
+                <!-- HAND Seekbar -->
+                <LinearLayout
+                    android:id="@+id/hand_layout"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="24dp"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <TextView
+                        android:layout_width="128dp"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical"
+                        android:textColor="@color/white_light"
+                        android:textSize="18sp"
+                        android:text="Hand"/>
+
+                    <SeekBar
+                        android:id="@+id/hand"
+                        android:layout_width="268dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="24dp"
+                        android:layout_gravity="center_vertical"
+                        android:max="100"
+                        android:progressDrawable="@drawable/seekbar"
+                        android:thumbTint="@android:color/transparent"/>
+
+                </LinearLayout>
+
+                <View
+                    android:id="@+id/hand_bottom"
                     android:layout_width="match_parent"
-                    android:layout_height="28dp"
-                    android:layout_marginLeft="16dp"
-                    android:layout_marginRight="16dp"
-                    android:layout_marginTop="8dp"/>
-
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="0.25"
-                android:orientation="horizontal"
-                android:gravity="center">
-
-                <ImageButton
-                    android:id="@+id/rotateLeft"
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    android:layout_marginRight="144dp"
-                    android:background="@drawable/left_arrow"
-                    android:backgroundTint="@color/colorAccent"/>
-
-                <ImageButton
-                    android:id="@+id/rotateRight"
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    android:background="@drawable/right_arrow"
-                    android:backgroundTint="@color/colorAccent"/>
+                    android:layout_height="1dp"
+                    android:layout_marginTop="24dp"
+                    android:alpha="0.2"
+                    android:background="@android:color/white"/>
 
             </LinearLayout>
 
         </LinearLayout>
 
-    </RelativeLayout>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_marginBottom="24dp"
+            android:layout_marginStart="36dp"
+            android:alpha="0.5"
+            android:typeface="serif"
+            android:text="@string/app_version"
+            android:textColor="@android:color/white"
+            android:textSize="16sp"/>
 
-    <android.support.design.widget.FloatingActionButton
-        android:id="@+id/powerImageButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom|start"
-        android:layout_margin="32dp"
-        android:src="@drawable/ic_power_settings_new_white"
-        app:fabSize="mini"
-        app:elevation="6dp"/>
+        <!-- Bluetooth status -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_marginTop="24dp"
+            android:layout_marginEnd="36dp"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/status_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:alpha="0.5"
+                android:typeface="serif"
+                android:text="@string/status_disconnected"
+                android:textColor="@android:color/white"
+                android:textSize="16sp"/>
+
+            <de.hdodenhof.circleimageview.CircleImageView
+                android:id="@+id/status_indicator"
+                android:layout_width="12dp"
+                android:layout_height="12dp"
+                android:layout_marginStart="8dp"
+                android:src="@android:color/holo_red_light"/>
+
+        </LinearLayout>
+
+        <!-- Rotation control -->
+        <FrameLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:layout_marginEnd="168dp">
+
+            <ImageView
+                android:id="@+id/inner_circle"
+                android:layout_width="296dp"
+                android:layout_height="296dp"
+                android:layout_gravity="center"
+                android:alpha="0.25"
+                android:padding="16dp"
+                android:background="@drawable/shape_circumference"/>
+
+            <LinearLayout
+                android:id="@+id/degrees_layout"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/arm_rotation_degrees"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:typeface="serif"
+                    android:text="32"
+                    android:textColor="@color/white_light"
+                    android:textSize="38sp"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingTop="8dp"
+                    android:alpha="0.5"
+                    android:typeface="serif"
+                    android:text="@string/degrees"
+                    android:textColor="@android:color/white"
+                    android:textSize="18sp"/>
+
+            </LinearLayout>
+
+            <!-- ROTATION -->
+            <com.triggertrap.seekarc.SeekArc
+                android:id="@+id/arm_rotation"
+                android:layout_width="396dp"
+                android:layout_height="396dp"
+                android:layout_gravity="center"
+                android:padding="16dp"
+                app:max="360"
+                app:rotation="135"
+                app:startAngle="90"
+                app:sweepAngle="270"
+                app:touchInside="true"
+                app:arcWidth="2dp"
+                app:arcColor="#77FFFFFF"
+                app:progressColor="@color/white_light"
+                app:roundEdges="true"
+                app:thumb="@android:color/transparent" />
+
+        </FrameLayout>
+
+        <FrameLayout
+            android:id="@+id/movement_container"
+            android:layout_width="198dp"
+            android:layout_height="122dp"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentBottom="true"
+            android:layout_marginEnd="264dp"
+            android:layout_marginBottom="58dp"
+            android:background="@drawable/shape_circumference_dark">
+
+            <ImageView
+                android:id="@+id/forward"
+                android:layout_width="52dp"
+                android:layout_height="52dp"
+                android:layout_gravity="center"
+                android:layout_marginBottom="28dp"
+                android:background="@drawable/dotted_circle"
+                android:scaleType="centerCrop"
+                android:backgroundTint="@color/white_dark"/>
+
+            <ImageView
+                android:id="@+id/backward"
+                android:layout_width="52dp"
+                android:layout_height="52dp"
+                android:layout_gravity="center"
+                android:layout_marginTop="28dp"
+                android:background="@drawable/dotted_circle"
+                android:scaleType="centerCrop"
+                android:backgroundTint="@color/white_dark"/>
+
+            <ImageView
+                android:id="@+id/left"
+                android:layout_width="52dp"
+                android:layout_height="52dp"
+                android:layout_gravity="center"
+                android:layout_marginRight="62dp"
+                android:background="@drawable/dotted_circle"
+                android:scaleType="centerCrop"
+                android:backgroundTint="@color/white_dark"/>
+
+            <ImageView
+                android:id="@+id/right"
+                android:layout_width="52dp"
+                android:layout_height="52dp"
+                android:layout_gravity="center"
+                android:layout_marginLeft="62dp"
+                android:background="@drawable/dotted_circle"
+                android:scaleType="centerCrop"
+                android:backgroundTint="@color/white_dark"/>
+
+        </FrameLayout>
+
+    </RelativeLayout>
 
 </android.support.design.widget.CoordinatorLayout>
